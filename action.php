@@ -6,9 +6,6 @@
  * @author		Michael Schuh <mike.schuh@gmx.at>
  */
 
-if(!defined('DOKU_INC')) die();
-if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
-require_once DOKU_PLUGIN.'action.php';
  
 class action_plugin_searchstats extends DokuWiki_Action_Plugin {
 
@@ -107,6 +104,7 @@ class action_plugin_searchstats extends DokuWiki_Action_Plugin {
 				}
 			}
 			fclose($writeF);
+			global $conf;
 			if($conf['fperm']) chmod($fn.'.tmp', $conf['fperm']);
 			io_rename($fn.'.tmp', $fn.'.idx');
 			return true;
