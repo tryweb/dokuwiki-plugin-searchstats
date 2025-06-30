@@ -48,11 +48,31 @@ class action_plugin_searchstats extends DokuWiki_Action_Plugin {
 			}
 			if(is_array($q['highlight'])) {
 				$this->_checkSaveFolder();
-				foreach($q['words'] as $saveWord) {
-					if(strlen(trim($saveWord)) > 0) {
-						//remove ;
-						$saveWord = str_replace(';', '', $saveWord);
-						$this->_saveSearchWord($saveWord);
+				
+				// Check if query contains Chinese/Japanese/Korean characters
+				$originalQuery = $event->data['query'];
+				$hasAsianChars = preg_match('/[\x{4e00}-\x{9fff}\x{3400}-\x{4dbf}\x{20000}-\x{2a6df}\x{2a700}-\x{2b73f}\x{2b740}-\x{2b81f}\x{2b820}-\x{2ceaf}\x{2ceb0}-\x{2ebef}\x{30a0}-\x{30ff}\x{3040}-\x{309f}]/u', $originalQuery);
+				
+				// For Asian languages, use the original query as a single phrase
+				// instead of relying on the parsed words which may be incorrectly segmented
+				if($hasAsianChars && !empty(trim($originalQuery))) {
+					// Clean the query and save as a single search term
+					$cleanQuery = trim($originalQuery);
+					$cleanQuery = str_replace(';', '', $cleanQuery);
+					$cleanQuery = preg_replace('/\s+/', ' ', $cleanQuery); // normalize whitespace
+					
+					if(strlen($cleanQuery) > 0) {
+						$this->_saveSearchWord($cleanQuery);
+					}
+				} else {
+					// For non-Asian languages, use the standard word parsing
+					$words = isset($q['words']) ? $q['words'] : array();
+					foreach($words as $saveWord) {
+						if(strlen(trim($saveWord)) > 0) {
+							//remove ;
+							$saveWord = str_replace(';', '', $saveWord);
+							$this->_saveSearchWord($saveWord);
+						}
 					}
 				}
 			}
